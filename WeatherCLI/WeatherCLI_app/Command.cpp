@@ -64,7 +64,7 @@ void DisplayCurrentWeather::Execute()
     {
         // Find the weather temperature for the current date
         int result_query = db->readDailyTemperatureFromDB(t.tm_year+1900, t.tm_mon+1, t.tm_mday, current_temperature);
-        if(result_query != SQLITE_OK)
+        if(result_query != SQLITE_OK || current_temperature==-800)
             cout << endl << "Failed to display the current weather in Athens." << endl;
         else
             cout << endl << "Weather temperature in Athens is: " << current_temperature << endl;
@@ -102,7 +102,7 @@ void CompareWeather::Execute()
         // Find the current weather temperature in Athens
         int results_query_daily_temp = db->readDailyTemperatureFromDB(t.tm_year+1900, t.tm_mon+1, t.tm_mday, current_temperature);
         // Compare average and current weather temperature in Athens
-        if(result_query_avg_temp == SQLITE_OK && results_query_daily_temp == SQLITE_OK)
+        if(result_query_avg_temp == SQLITE_OK && results_query_daily_temp == SQLITE_OK && current_temperature!=-800 && average_temperature!=-800)
         {
             if(average_temperature > current_temperature)
                 cout << endl << "Current Weather temperature in Athens (" << current_temperature << " Celsius) is lower than the average temperature of last " << time_period << " (" << average_temperature << " Celsius)" << endl;
@@ -132,7 +132,7 @@ void DisplayAverageWeather::Execute()
     double average_temperature;
     // Find the average weather temperature of a specific month and year
     int result_query = db->readAverageMonthlyTemperatureFromDB(year, month, average_temperature);
-    if(result_query != SQLITE_OK)
+    if(result_query != SQLITE_OK || average_temperature==-800)
         cout << endl << "Failed to display the average weather in Athens for Year = " << year << " and Month = " << month << endl;
     else
         cout << endl << "Average Weather temperature in Athens on Year = " << year << " and Month = " << month << " is " << average_temperature << endl;

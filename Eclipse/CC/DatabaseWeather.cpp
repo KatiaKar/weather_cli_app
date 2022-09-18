@@ -145,7 +145,7 @@ int DatabaseWeather::writeTemperatureDataInDB(int year, int month, int day, int 
 int DatabaseWeather::doubleResultFromSelectQuery(void* data, int argc, char** argv, char** resName)
 {
     // Expect to receive only one value (average temperature of a year or daily temperature)
-    if (argc == 1)
+    if (argc == 1 && argv[0]!=nullptr)
     {
         char *res;
         cout << endl << resName[0] << " = " << ((argv[0]) ? argv[0] : "NULL") << endl;
@@ -153,11 +153,13 @@ int DatabaseWeather::doubleResultFromSelectQuery(void* data, int argc, char** ar
         res_temperature = strtod(argv[0],&res);
         if (errno != 0 || *res != '\0') {
             cerr << endl << "Failed to SELECT the correct weather data from the table. strtod() failed." << endl;
+            res_temperature = -800.0;
         }
     }
     else
     {
-        cerr << endl << "Failed to SELECT the correct weather data from the table." << endl;
+        cerr << endl << "SELECT did not return weather data." << endl;
+        res_temperature = -800.0;
     }
     return 0;
 }
@@ -166,10 +168,9 @@ int DatabaseWeather::intResultFromSelectQuery(void* data, int argc, char** argv,
 {
     int *c = (int *)data;
     // Expect to receive only one value (number of entries)
-    if (argc == 1)
+    if (argc == 1 && argv[0]!=nullptr)
     {
         cout << endl << resName[0] << " = " << ((argv[0]) ? argv[0] : "NULL") << endl;
-        errno = 0;
         *c = atoi(argv[0]);
     }
     else
@@ -201,7 +202,8 @@ int DatabaseWeather::readDailyTemperatureFromDB(int year, int month, int day, do
     // Execute the query for extracting data from the table
     cout << endl << "Current SELECT SLQ command is: " << sql_query << endl;
     rc_sqlite_comm = sqlite3_exec(DB, sql_query.c_str(), doubleResultFromSelectQuery, NULL, NULL);
-    if (rc_sqlite_comm != SQLITE_OK)
+    current_temperature = res_temperature;
+    if (rc_sqlite_comm != SQLITE_OK || res_temperature == -800)
     {
         // in case of error return the error code and close the DB
         cerr << endl << "Failed to SELECT weather data from the table. Error: " << sqlite3_errmsg(DB) << endl;
@@ -211,7 +213,6 @@ int DatabaseWeather::readDailyTemperatureFromDB(int year, int month, int day, do
     else
     {
         cout << endl << "Succeeded to SELECT weather data from the table." << endl;
-        current_temperature = res_temperature;
     }
 
     // Close the database
@@ -257,7 +258,8 @@ int DatabaseWeather::readAverageLastTemperatureFromDB(int entries_of_last_period
     sql_query = "SELECT AVG(TEMPERATURE) FROM (SELECT TEMPERATURE FROM AVG_TEMPERATURE LIMIT " + to_string(entries_of_last_period) + " OFFSET " + to_string(total_entries-(entries_of_last_period)) + ")";
     cout << endl << "Current SELECT SLQ command is: " << sql_query << endl;
     rc_sqlite_comm = sqlite3_exec(DB, sql_query.c_str(), doubleResultFromSelectQuery, NULL, NULL);
-    if (rc_sqlite_comm != SQLITE_OK)
+    average_temperature = res_temperature;
+    if (rc_sqlite_comm != SQLITE_OK || res_temperature == -800)
     {
         // in case of error return the error code and close the DB
         cerr << endl << "Failed to SELECT weather data from the table. Error: " << sqlite3_errmsg(DB) << endl;
@@ -267,14 +269,11 @@ int DatabaseWeather::readAverageLastTemperatureFromDB(int entries_of_last_period
     else
     {
         cout << endl << "Succeeded to SELECT weather data from the table." << endl;
-        average_temperature = res_temperature;
     }
 
     // Close the database
     sqlite3_close(DB);
     return rc_sqlite_comm;
-
-    return 0;
 }
 
 int DatabaseWeather::readAverageMonthlyTemperatureFromDB(int year, int month, double &average_temperature){
@@ -299,7 +298,8 @@ int DatabaseWeather::readAverageMonthlyTemperatureFromDB(int year, int month, do
     // Execute the query for extracting data from the table
     cout << endl << "Current SELECT SLQ command is: " << sql_query << endl;
     rc_sqlite_comm = sqlite3_exec(DB, sql_query.c_str(), doubleResultFromSelectQuery, NULL, NULL);
-    if (rc_sqlite_comm != SQLITE_OK)
+    average_temperature = res_temperature;
+    if (rc_sqlite_comm != SQLITE_OK || res_temperature == -800)
     {
         // in case of error return the error code and close the DB
         cerr << endl << "Failed to SELECT weather data from the table. Error: " << sqlite3_errmsg(DB) << endl;
@@ -309,7 +309,6 @@ int DatabaseWeather::readAverageMonthlyTemperatureFromDB(int year, int month, do
     else
     {
         cout << endl << "Succeeded to SELECT weather data from the table." << endl;
-        average_temperature = res_temperature;
     }
 
     // Close the database
