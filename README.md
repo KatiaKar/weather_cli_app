@@ -1,6 +1,6 @@
 ## Weather CLI Application
 
-- This project was developed as part of a technical assessment for a job interview and is published here with permission.
+- I developed this project for a job interview technical assessment and have published it here with permission.
 
 - Information about the attached source files, installations and applications' execution 
 is mentioned on the "WeatherClI_Documentation.pdf"
