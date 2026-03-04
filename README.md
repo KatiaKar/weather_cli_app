@@ -1,4 +1,4 @@
-## Documentation
+## Weather CLI Application
 
 - This project was developed as part of a technical assessment for a job interview and is published here with permission.
 
